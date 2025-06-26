@@ -87,9 +87,11 @@ public class WebResourceAction {
     commands.debug("Action unpublish");
   }
 
-  //@Action("webresource-publish-all")
+  @Action("webresource-publish-all")
   void publishAll(Commands commands) {
-    commands.debug("Action publishAll");
+    commands.notice("Hello from publishAll Quarkus GitHub Action");
+
+    commands.appendJobSummary(":wave: Hello from publishAll Quarkus GitHub Action");
   }
 
 }
