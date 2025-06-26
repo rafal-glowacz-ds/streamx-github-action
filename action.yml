@@ -1,4 +1,4 @@
-name: 'StreamX Action'
+name: 'quarkus-github-action'
 description: 'Description of StreamX Actions'
 inputs:
   github-token:

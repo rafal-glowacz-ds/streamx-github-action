@@ -4,7 +4,7 @@
     <groupId>dev.streamx.githhub</groupId>
     <artifactId>streamx-github-action</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>StreamX Actions</name>
+    <name>StreamX GitHub Action</name>
     <description>Description of StreamX Actions</description>
 
     <properties>

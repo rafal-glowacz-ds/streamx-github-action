@@ -24,8 +24,14 @@ import org.kohsuke.github.GHEventPayload;
 
 public class WebResourceAction {
 
+  @Action
+  void action(Commands commands) {
+    commands.notice("Hello from Quarkus GitHub Action");
 
-  @Action("webresource-sync-on-pullrequest-merged")
+    commands.appendJobSummary(":wave: Hello from Quarkus GitHub Action");
+  }
+
+  //@Action("webresource-sync-on-pullrequest-merged")
   void webresourceSyncOnPullRequestMerged(Commands commands, Inputs inputs,
       @PullRequest GHEventPayload.PullRequest payload) throws IOException {
     commands.debug("Action webresourceSyncOnPullRequestMerged");
@@ -76,12 +82,12 @@ public class WebResourceAction {
     }
   }
 
-  @Action("webresource-unpublish")
+  //@Action("webresource-unpublish")
   void unpublish(Commands commands) {
     commands.debug("Action unpublish");
   }
 
-  @Action("webresource-publish-all")
+  //@Action("webresource-publish-all")
   void publishAll(Commands commands) {
     commands.debug("Action publishAll");
   }
