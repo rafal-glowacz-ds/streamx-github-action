@@ -1,4 +1,4 @@
-name: 'StreamX Actions'
+name: 'webresource-publish-all'
 description: 'Description of StreamX Actions'
 inputs:
   github-token:
