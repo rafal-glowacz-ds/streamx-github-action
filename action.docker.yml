@@ -1,0 +1,9 @@
+name: 'StreamX Actions'
+description: 'Description of StreamX Actions'
+inputs:
+  github-token:
+    description: 'GitHub token'
+    required: false
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/rafal-glowacz-ds/streamx-github-action:main'
