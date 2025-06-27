@@ -4,6 +4,7 @@ import io.quarkiverse.githubaction.Action;
 import io.quarkiverse.githubaction.Commands;
 import io.quarkiverse.githubaction.Inputs;
 import io.quarkiverse.githubapp.event.PullRequest;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -31,48 +32,54 @@ public class WebResourceAction {
     commands.appendJobSummary(":wave: Hello from Quarkus GitHub Action");
   }
 
-  //@Action("webresource-sync-on-pullrequest-merged")
+  @Action("webresource-sync-on-pullrequest-merged")
   void webresourceSyncOnPullRequestMerged(Commands commands, Inputs inputs,
       @PullRequest GHEventPayload.PullRequest payload) throws IOException {
-    commands.debug("Action webresourceSyncOnPullRequestMerged");
-    int commits = payload.getPullRequest().getCommits();
+    commands.appendJobSummary(
+        ":wave: Webresource Sync On Pull Request Merged from Quarkus GitHub Action");
+    commands.notice("Here webresourceSyncOnPullRequestMerged from Quarkus GitHub Action");
 
-    commands.warning("Number of commits: " + commands);
+    int commits = payload.getPullRequest().getCommits();
+    commands.notice("Number of commits: " + commands);
 
     String githubToken = inputs.getRequired("GITHUB_TOKEN");
+    commands.notice("GithubToken: " + githubToken);
 
-    CloneCommand cloneCommand = Git.cloneRepository()
-        .setDirectory(Path.of("./repo").toFile())
-        .setURI("https://github.com/my-username/my-repo.git")
-        .setCredentialsProvider(
-            new UsernamePasswordCredentialsProvider(githubToken, StringUtils.EMPTY));
-    try (Git git = cloneCommand.call()) {
-      Repository repository = git.getRepository();
+//    CloneCommand cloneCommand = Git.cloneRepository()
+//        .setDirectory(Path.of("./repo").toFile())
+//        .setURI("https://github.com/my-username/my-repo.git")
+//        .setCredentialsProvider(
+//            new UsernamePasswordCredentialsProvider(githubToken, StringUtils.EMPTY));
 
-      ObjectId head = repository.resolve("HEAD");
-      ObjectId changes = repository.resolve("HEAD^" + commits);
+    File gitDirectory = Path.of(".").toFile();
+    commands.notice("gitDirectory: " + gitDirectory);
 
-      try (ObjectReader reader = repository.newObjectReader()) {
-        CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-        oldTreeIter.reset(reader, changes);
-        CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-        newTreeIter.reset(reader, head);
+    Git git = Git.open(gitDirectory);
+    Repository repository = git.getRepository();
 
-        List<DiffEntry> diffs = git.diff()
-            .setShowNameAndStatusOnly(true)
-            .setNewTree(newTreeIter)
-            .setOldTree(oldTreeIter)
-            .call();
-        for (DiffEntry entry : diffs) {
-          ChangeType changeType = entry.getChangeType();
-          if (changeType == ChangeType.DELETE) {
-            commands.debug("Deleted file " + entry.getNewPath());
-          } else {
-            commands.debug("Changed file " + entry.getNewPath());
-          }
+    ObjectId head = repository.resolve("HEAD");
+    ObjectId changes = repository.resolve("HEAD^" + commits);
+
+    try (ObjectReader reader = repository.newObjectReader()) {
+      CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+      oldTreeIter.reset(reader, changes);
+      CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+      newTreeIter.reset(reader, head);
+
+      List<DiffEntry> diffs = git.diff()
+          .setShowNameAndStatusOnly(true)
+          .setNewTree(newTreeIter)
+          .setOldTree(oldTreeIter)
+          .call();
+      for (DiffEntry entry : diffs) {
+        ChangeType changeType = entry.getChangeType();
+        if (changeType == ChangeType.DELETE) {
+          commands.debug("Deleted file " + entry.getNewPath());
+        } else {
+          commands.debug("Changed file " + entry.getNewPath());
         }
-
       }
+
     } catch (InvalidRemoteException e) {
       throw new RuntimeException(e);
     } catch (TransportException e) {
