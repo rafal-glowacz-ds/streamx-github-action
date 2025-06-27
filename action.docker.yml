@@ -1,4 +1,4 @@
-name: 'webresource-publish-all'
+name: 'quarkus-github-action'
 description: 'Description of StreamX Actions'
 inputs:
   github-token:
