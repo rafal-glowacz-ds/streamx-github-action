@@ -32,7 +32,7 @@ public class WebResourceAction {
     commands.appendJobSummary(":wave: Hello from Quarkus GitHub Action");
   }
 
-  @Action("webresource-sync-on-pullrequest-merged")
+  @Action("pull_request")
   void webresourceSyncOnPullRequestMerged(Commands commands, Inputs inputs,
       @PullRequest GHEventPayload.PullRequest payload) throws IOException {
     commands.appendJobSummary(
@@ -94,7 +94,7 @@ public class WebResourceAction {
     commands.debug("Action unpublish");
   }
 
-  @Action("webresource-publish-all")
+  @Action("workflow_dispatch")
   void publishAll(Commands commands) {
     commands.notice("Hello from publishAll Quarkus GitHub Action");
 
