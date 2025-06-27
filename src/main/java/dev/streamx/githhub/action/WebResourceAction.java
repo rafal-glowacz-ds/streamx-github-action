@@ -68,8 +68,8 @@ public class WebResourceAction {
     Git git = Git.open(gitDirectory);
     Repository repository = git.getRepository();
 
-    ObjectId head = repository.resolve("HEAD");
-    ObjectId changes = repository.resolve("HEAD^" + commits);
+    ObjectId head = repository.resolve("HEAD^{tree}");
+    ObjectId changes = repository.resolve("HEAD~" + commits + "^{tree}");
 
     try (ObjectReader reader = repository.newObjectReader()) {
       CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
