@@ -40,7 +40,7 @@ public class WebResourceAction {
     commands.notice("Here webresourceSyncOnPullRequestMerged from Quarkus GitHub Action");
 
     int commits = payload.getPullRequest().getCommits();
-    commands.notice("Number of commits: " + commands);
+    commands.notice("Number of commits: " + commits);
 
     String githubToken = inputs.getRequired("GITHUB_TOKEN");
     commands.notice("GithubToken: " + githubToken);
@@ -52,7 +52,7 @@ public class WebResourceAction {
 //            new UsernamePasswordCredentialsProvider(githubToken, StringUtils.EMPTY));
 
     File gitDirectory = Path.of(".").toFile();
-    commands.notice("gitDirectory: " + gitDirectory);
+    commands.notice("gitDirectory: " + gitDirectory.getAbsolutePath());
 
     Git git = Git.open(gitDirectory);
     Repository repository = git.getRepository();
