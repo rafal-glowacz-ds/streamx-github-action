@@ -31,10 +31,10 @@ public class FilesUtils {
     try {
       return Files.find(Paths.get(workspace),
               Integer.MAX_VALUE,
-              (filePath, fileAttr) -> fileAttr.isRegularFile()
-                  && validatePathMatches(filePath.toAbsolutePath().toString(), filters))
+              (filePath, fileAttr) -> fileAttr.isRegularFile())
           .map(filePath -> filePath.toAbsolutePath().toString())
           .map(path -> path.substring(workspace.length()))
+          .filter(path -> validatePathMatches(path, filters))
           .collect(Collectors.toSet());
     } catch (IOException exc) {
       throw new GithubActionException(exc.getMessage(), exc);

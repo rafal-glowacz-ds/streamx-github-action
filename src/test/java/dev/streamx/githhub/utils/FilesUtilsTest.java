@@ -45,6 +45,20 @@ class FilesUtilsTest {
   }
 
   @Test
+  public void testShouldListOnlyTest1CssFiles() throws GithubActionException {
+    Path testWorkspacePath = getTestWorkspacePath();
+
+    Set<String> result = FilesUtils.listFilteredFiles(
+        testWorkspacePath.toAbsolutePath().toString(), "/test_1/*.css");
+
+    assertFalse(result.isEmpty());
+    assertEquals(2, result.size());
+    assertTrue(result.stream().allMatch(s -> s.contains(".css")));
+    assertTrue(result.contains("/test_1/file_1_1.css"));
+    assertTrue(result.contains("/test_1/file_1_2.css"));
+  }
+
+  @Test
   public void testShouldListOnlyJsFiles() throws GithubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
 
