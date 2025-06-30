@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 class FilesUtilsTest {
 
-
   @Test
   public void testShouldListAllFiles() throws GithubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
@@ -21,6 +20,12 @@ class FilesUtilsTest {
     assertFalse(result.isEmpty());
     assertEquals(6, result.size());
     assertTrue(result.stream().allMatch(s -> s.contains(".css") || s.contains(".js")));
+    assertTrue(result.contains("/root.css"));
+    assertTrue(result.contains("/test_1/file_1_1.css"));
+    assertTrue(result.contains("/test_1/file_1_2.css"));
+    assertTrue(result.contains("/test_2/file_2_1.css"));
+    assertTrue(result.contains("/test_2/file_2_1.js"));
+    assertTrue(result.contains("/test_2/test_2_2/file_2_2_1.js"));
   }
 
   @Test
