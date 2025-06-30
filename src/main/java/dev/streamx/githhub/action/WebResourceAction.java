@@ -1,7 +1,9 @@
 package dev.streamx.githhub.action;
 
+import dev.streamx.githhub.exception.GithubActionException;
 import dev.streamx.githhub.git.GitService;
 import dev.streamx.githhub.git.impl.DiffResult;
+import dev.streamx.githhub.utils.FilesUtils;
 import io.quarkiverse.githubaction.Action;
 import io.quarkiverse.githubaction.Commands;
 import io.quarkiverse.githubaction.Context;
@@ -10,30 +12,19 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkiverse.githubapp.event.WorkflowDispatch;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffEntry.ChangeType;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 
 @ApplicationScoped
 public class WebResourceAction {
+
+  private static final Logger log = Logger.getLogger(WebResourceAction.class);
 
   @Inject
   private GitService gitService;
@@ -65,17 +56,22 @@ public class WebResourceAction {
     String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
 
-    DiffResult diffResult = gitService.getDiff(workspace, commits);
-    if (diffResult.isEmpty()) {
-      commands.notice(String.format("No changes detected at workspace: %s", workspace));
-    } else {
-      commands.notice(String.format("Changes detected at workspace: %s", workspace));
-      Set<String> modifiedPaths = diffResult.getModifiedPaths();
-      commands.notice(String.format("%d changes detected", modifiedPaths.size()));
-      Set<String> deletedPaths = diffResult.getDeletedPaths();
-      commands.notice(String.format("%d deletions detected", deletedPaths.size()));
+    try {
+      DiffResult diffResult = gitService.getDiff(workspace, commits);
+      if (diffResult.isEmpty()) {
+        commands.notice(String.format("No changes detected at workspace: %s", workspace));
+      } else {
+        commands.notice(String.format("Changes detected at workspace: %s", workspace));
+        Set<String> modifiedPaths = diffResult.getModifiedPaths();
+        commands.notice(String.format("%d changes detected", modifiedPaths.size()));
+        Set<String> deletedPaths = diffResult.getDeletedPaths();
+        commands.notice(String.format("%d deletions detected", deletedPaths.size()));
 
 
+      }
+    } catch (GithubActionException exc) {
+      log.error(exc.getMessage(), exc);
+      commands.error(exc.getMessage());
     }
   }
 
@@ -88,6 +84,17 @@ public class WebResourceAction {
 
     String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
+    Map<String, Object> inputs = payload.getInputs();
+    Object includeAntMatchPatterns = inputs.get("streamx-ingestion-webresource-includes");
+    commands.notice("Includes AntMatch patterns: " + includeAntMatchPatterns);
+
+    try {
+      Set<String> strings = FilesUtils.listFiles(workspace);
+
+    } catch (GithubActionException exc) {
+      log.error(exc.getMessage(), exc);
+      commands.error(exc.getMessage());
+    }
 
   }
 

@@ -10,6 +10,9 @@ inputs:
   action:
     description: 'Name of the action (if named)'
     required: false
+  streamx-ingestion-webresource-includes:
+    description: 'Included ant pattern files configuration list'
+    required: false
 
 runs:
   using: "composite"
