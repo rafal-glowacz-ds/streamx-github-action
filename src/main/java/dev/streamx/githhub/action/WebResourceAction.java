@@ -85,8 +85,9 @@ public class WebResourceAction {
 
     String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
-    Object includeAntMatchPatterns = inputs.get("streamx-ingestion-webresource-includes");
-    commands.notice("Includes AntMatch patterns: " + includeAntMatchPatterns);
+    commands.notice("Includes AntMatch patterns: " + inputs.all());
+    String jsonInputs = System.getenv("JSON_INPUTS");
+    commands.notice("JSON_INPUTS: " + jsonInputs);
 
     try {
       Set<String> files = FilesUtils.listFiles(workspace);
