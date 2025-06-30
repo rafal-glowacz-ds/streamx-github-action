@@ -1,16 +1,21 @@
 package dev.streamx.githhub.action;
 
+import dev.streamx.githhub.git.GitService;
+import dev.streamx.githhub.git.impl.DiffResult;
 import io.quarkiverse.githubaction.Action;
 import io.quarkiverse.githubaction.Commands;
 import io.quarkiverse.githubaction.Context;
 import io.quarkiverse.githubaction.Inputs;
 import io.quarkiverse.githubapp.event.PullRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
@@ -26,7 +31,11 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.kohsuke.github.GHEventPayload;
 
+@ApplicationScoped
 public class WebResourceAction {
+
+  @Inject
+  private GitService gitService;
 
   @Action
   void action(Commands commands) {
@@ -52,46 +61,20 @@ public class WebResourceAction {
 
     int commits = payload.getPullRequest().getCommits();
     commands.notice("Number of commits: " + commits);
+    String workspace = context.getRunnerWorkspace();
+    commands.notice("Workspace: " + workspace);
 
-    Optional<String> githubToken = inputs.get("GITHUB_TOKEN");
-    commands.notice("GithubToken: " + (githubToken.isPresent() ?  githubToken.get() : "EMPTY_GITHUB_TOKEN"));
+    DiffResult diffResult = gitService.getDiff(workspace, commits);
+    if (diffResult.isEmpty()) {
+      commands.notice(String.format("No changes detected at workspace: %s", workspace));
+    } else {
+      commands.notice(String.format("Changes detected at workspace: %s", workspace));
+      Set<String> modifiedPaths = diffResult.getModifiedPaths();
+      commands.notice(String.format("%d changes detected", modifiedPaths.size()));
+      Set<String> deletedPaths = diffResult.getDeletedPaths();
+      commands.notice(String.format("%d deletions detected", deletedPaths.size()));
 
 
-    commands.notice("context.getRunnerWorkspace(): " + context.getRunnerWorkspace());
-    File workspace = Path.of(context.getRunnerWorkspace()).toFile();
-    commands.notice("workspace: " + workspace.getAbsolutePath());
-
-    Git git = Git.open(workspace);
-    Repository repository = git.getRepository();
-
-    ObjectId head = repository.resolve("HEAD^{tree}");
-    ObjectId changes = repository.resolve("HEAD~" + commits + "^{tree}");
-    try (ObjectReader reader = repository.newObjectReader()) {
-      CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-      oldTreeIter.reset(reader, changes);
-      CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-      newTreeIter.reset(reader, head);
-
-      List<DiffEntry> diffs = git.diff()
-          .setShowNameAndStatusOnly(true)
-          .setNewTree(newTreeIter)
-          .setOldTree(oldTreeIter)
-          .call();
-      for (DiffEntry entry : diffs) {
-        ChangeType changeType = entry.getChangeType();
-        if (changeType == ChangeType.DELETE) {
-          commands.debug("Deleted file " + entry.getNewPath());
-        } else {
-          commands.debug("Changed file " + entry.getNewPath());
-        }
-      }
-
-    } catch (InvalidRemoteException e) {
-      throw new RuntimeException(e);
-    } catch (TransportException e) {
-      throw new RuntimeException(e);
-    } catch (GitAPIException e) {
-      throw new RuntimeException(e);
     }
   }
 
