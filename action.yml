@@ -48,3 +48,5 @@ runs:
       env:
         JSON_INPUTS: ${{ toJSON(inputs) }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
+      with:
+        streamx-ingestion-webresource-includes: ${{ inputs.streamx-ingestion-webresource-includes }}

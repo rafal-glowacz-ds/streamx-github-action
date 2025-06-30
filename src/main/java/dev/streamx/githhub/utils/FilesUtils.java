@@ -18,8 +18,8 @@ public class FilesUtils {
       return Files.find(Paths.get(workspace),
               Integer.MAX_VALUE,
               (filePath, fileAttr) -> fileAttr.isRegularFile())
-          .map(fileAttr -> fileAttr.toAbsolutePath())
-          .map(Path::toString)
+          .map(fileAttr -> fileAttr.toAbsolutePath().toString())
+          .map(path -> path.substring(workspace.length()))
           .collect(Collectors.toSet());
     } catch (IOException exc) {
       throw new GithubActionException(exc.getMessage(), exc);
@@ -33,7 +33,8 @@ public class FilesUtils {
               Integer.MAX_VALUE,
               (filePath, fileAttr) -> fileAttr.isRegularFile()
                   && validatePathMatches(filePath.toAbsolutePath().toString(), filters))
-          .map(Path::toString)
+          .map(filePath -> filePath.toAbsolutePath().toString())
+          .map(path -> path.substring(workspace.length()))
           .collect(Collectors.toSet());
     } catch (IOException exc) {
       throw new GithubActionException(exc.getMessage(), exc);
