@@ -7,6 +7,7 @@ import io.quarkiverse.githubaction.Commands;
 import io.quarkiverse.githubaction.Context;
 import io.quarkiverse.githubaction.Inputs;
 import io.quarkiverse.githubapp.event.PullRequest;
+import io.quarkiverse.githubapp.event.WorkflowDispatch;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.io.File;
@@ -61,7 +62,7 @@ public class WebResourceAction {
 
     int commits = payload.getPullRequest().getCommits();
     commands.notice("Number of commits: " + commits);
-    String workspace = context.getRunnerWorkspace();
+    String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
 
     DiffResult diffResult = gitService.getDiff(workspace, commits);
@@ -78,16 +79,16 @@ public class WebResourceAction {
     }
   }
 
-  //@Action("webresource-unpublish")
-  void unpublish(Commands commands) {
-    commands.debug("Action unpublish");
-  }
-
   @Action("workflow_dispatch")
-  void publishAll(Commands commands) {
+  void publishAll(Commands commands, @WorkflowDispatch GHEventPayload.WorkflowDispatch payload,
+      Context context) {
     commands.notice("Hello from publishAll Quarkus GitHub Action");
 
     commands.appendJobSummary(":wave: Hello from publishAll Quarkus GitHub Action");
+
+    String workspace = context.getGitHubWorkspace();
+    commands.notice("Workspace: " + workspace);
+
   }
 
 }
