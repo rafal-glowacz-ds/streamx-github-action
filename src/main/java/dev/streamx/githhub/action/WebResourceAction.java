@@ -56,21 +56,16 @@ public class WebResourceAction {
     Optional<String> githubToken = inputs.get("GITHUB_TOKEN");
     commands.notice("GithubToken: " + (githubToken.isPresent() ?  githubToken.get() : "EMPTY_GITHUB_TOKEN"));
 
-//    CloneCommand cloneCommand = Git.cloneRepository()
-//        .setDirectory(Path.of("./repo").toFile())
-//        .setURI("https://github.com/my-username/my-repo.git")
-//        .setCredentialsProvider(
-//            new UsernamePasswordCredentialsProvider(githubToken, StringUtils.EMPTY));
 
-    File gitDirectory = Path.of(".").toFile();
-    commands.notice("gitDirectory: " + gitDirectory.getAbsolutePath());
+    commands.notice("context.getRunnerWorkspace(): " + context.getRunnerWorkspace());
+    File workspace = Path.of(context.getRunnerWorkspace()).toFile();
+    commands.notice("workspace: " + workspace.getAbsolutePath());
 
-    Git git = Git.open(gitDirectory);
+    Git git = Git.open(workspace);
     Repository repository = git.getRepository();
 
     ObjectId head = repository.resolve("HEAD^{tree}");
     ObjectId changes = repository.resolve("HEAD~" + commits + "^{tree}");
-
     try (ObjectReader reader = repository.newObjectReader()) {
       CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
       oldTreeIter.reset(reader, changes);
