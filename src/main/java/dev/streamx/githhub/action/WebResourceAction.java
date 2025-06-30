@@ -1,5 +1,9 @@
 package dev.streamx.githhub.action;
 
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.streamx.githhub.exception.GithubActionException;
 import dev.streamx.githhub.git.GitService;
 import dev.streamx.githhub.git.impl.DiffResult;
@@ -17,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
@@ -28,6 +33,9 @@ public class WebResourceAction {
 
   @Inject
   private GitService gitService;
+
+  @Inject
+  private ObjectMapper objectMapper;
 
   @Action
   void action(Commands commands) {
@@ -83,14 +91,24 @@ public class WebResourceAction {
 
     commands.appendJobSummary(":wave: Hello from publishAll Quarkus GitHub Action");
 
+
+    Optional<String> filePatternsInputOpt = (Optional<String>) filePatternsInputOpt.get(
+        "streamx-ingestion-webresource-includes");
+    if (filePatternsInputOpt.isEmpty()) {
+      commands.error("Missing file patterns variable [STREAMX_INGESTION_WEBRESOURCE_INCLUDES]. Execution skipped.");
+      return;
+    }
+
     String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
-    commands.notice("Includes AntMatch patterns: " + inputs.all());
+
+    commands.notice("Includes AntMatch patterns: " + filePatternsInputOpt);
     String jsonInputs = System.getenv("JSON_INPUTS");
     commands.notice("JSON_INPUTS: " + jsonInputs);
 
     try {
-      Set<String> files = FilesUtils.listFiles(workspace);
+      String[] filePatterns = objectMapper.readValue(filePatternsInputOpt.get(), String[].class);
+      Set<String> files = FilesUtils.listFilteredFiles(workspace, filePatterns);
 
       for (String filePath : files) {
         commands.notice("file: " + filePath);
@@ -99,6 +117,10 @@ public class WebResourceAction {
     } catch (GithubActionException exc) {
       log.error(exc.getMessage(), exc);
       commands.error(exc.getMessage());
+    } catch (JacksonException exc) {
+      String errMsg = "Failed to deserialize file patterns: " + exc.getMessage();
+      log.error(errMsg, exc);
+      commands.error(errMsg);
     }
 
   }
