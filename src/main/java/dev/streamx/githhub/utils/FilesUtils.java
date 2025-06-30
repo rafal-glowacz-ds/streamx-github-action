@@ -18,7 +18,7 @@ public class FilesUtils {
       return Files.find(Paths.get(workspace),
               Integer.MAX_VALUE,
               (filePath, fileAttr) -> fileAttr.isRegularFile())
-          .map(fileAttr -> fileAttr.getFileName())
+          .map(fileAttr -> fileAttr.toAbsolutePath())
           .map(Path::toString)
           .collect(Collectors.toSet());
     } catch (IOException exc) {

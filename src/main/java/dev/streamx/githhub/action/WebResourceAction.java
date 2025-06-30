@@ -76,7 +76,8 @@ public class WebResourceAction {
   }
 
   @Action("workflow_dispatch")
-  void publishAll(Commands commands, @WorkflowDispatch GHEventPayload.WorkflowDispatch payload,
+  void publishAll(Commands commands, Inputs inputs,
+      @WorkflowDispatch GHEventPayload.WorkflowDispatch payload,
       Context context) {
     commands.notice("Hello from publishAll Quarkus GitHub Action");
 
@@ -84,7 +85,6 @@ public class WebResourceAction {
 
     String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
-    Map<String, Object> inputs = payload.getInputs();
     Object includeAntMatchPatterns = inputs.get("streamx-ingestion-webresource-includes");
     commands.notice("Includes AntMatch patterns: " + includeAntMatchPatterns);
 
