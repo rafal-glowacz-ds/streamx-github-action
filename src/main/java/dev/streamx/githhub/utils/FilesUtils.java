@@ -32,7 +32,7 @@ public class FilesUtils {
       return Files.find(Paths.get(workspace),
               Integer.MAX_VALUE,
               (filePath, fileAttr) -> fileAttr.isRegularFile()
-                  && validatePathMatches(filePath.toString(), filters))
+                  && validatePathMatches(filePath.toAbsolutePath().toString(), filters))
           .map(Path::toString)
           .collect(Collectors.toSet());
     } catch (IOException exc) {
