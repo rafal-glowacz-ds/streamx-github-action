@@ -92,8 +92,7 @@ public class WebResourceAction {
     commands.appendJobSummary(":wave: Hello from publishAll Quarkus GitHub Action");
 
 
-    Optional<String> filePatternsInputOpt = (Optional<String>) filePatternsInputOpt.get(
-        "streamx-ingestion-webresource-includes");
+    Optional<String> filePatternsInputOpt = inputs.get("streamx-ingestion-webresource-includes");
     if (filePatternsInputOpt.isEmpty()) {
       commands.error("Missing file patterns variable [STREAMX_INGESTION_WEBRESOURCE_INCLUDES]. Execution skipped.");
       return;
