@@ -89,7 +89,11 @@ public class WebResourceAction {
     commands.notice("Includes AntMatch patterns: " + includeAntMatchPatterns);
 
     try {
-      Set<String> strings = FilesUtils.listFiles(workspace);
+      Set<String> files = FilesUtils.listFiles(workspace);
+
+      for (String filePath : files) {
+        commands.notice("file: " + filePath);
+      }
 
     } catch (GithubActionException exc) {
       log.error(exc.getMessage(), exc);
