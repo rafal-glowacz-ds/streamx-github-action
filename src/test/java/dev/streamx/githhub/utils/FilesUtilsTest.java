@@ -38,7 +38,10 @@ class FilesUtilsTest {
     assertFalse(result.isEmpty());
     assertEquals(4, result.size());
     assertTrue(result.stream().allMatch(s -> s.contains(".css")));
-    assertTrue(result.contains(""));
+    assertTrue(result.contains("/root.css"));
+    assertTrue(result.contains("/test_1/file_1_1.css"));
+    assertTrue(result.contains("/test_1/file_1_2.css"));
+    assertTrue(result.contains("/test_2/file_2_1.css"));
   }
 
   @Test
