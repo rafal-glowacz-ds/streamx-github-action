@@ -19,7 +19,7 @@ public class FilesUtils {
               Integer.MAX_VALUE,
               (filePath, fileAttr) -> fileAttr.isRegularFile())
           .map(fileAttr -> fileAttr.toAbsolutePath().toString())
-          .map(path -> path.substring(workspace.length()))
+          .map(path -> path.substring(workspace.length() + 1))
           .collect(Collectors.toSet());
     } catch (IOException exc) {
       throw new GithubActionException(exc.getMessage(), exc);
@@ -33,7 +33,7 @@ public class FilesUtils {
               Integer.MAX_VALUE,
               (filePath, fileAttr) -> fileAttr.isRegularFile())
           .map(filePath -> filePath.toAbsolutePath().toString())
-          .map(path -> path.substring(workspace.length()))
+          .map(path -> path.substring(workspace.length() + 1))
           .filter(path -> validatePathMatches(path, filters))
           .collect(Collectors.toSet());
     } catch (IOException exc) {

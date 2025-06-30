@@ -20,12 +20,12 @@ class FilesUtilsTest {
     assertFalse(result.isEmpty());
     assertEquals(6, result.size());
     assertTrue(result.stream().allMatch(s -> s.contains(".css") || s.contains(".js")));
-    assertTrue(result.contains("/root.css"));
-    assertTrue(result.contains("/test_1/file_1_1.css"));
-    assertTrue(result.contains("/test_1/file_1_2.css"));
-    assertTrue(result.contains("/test_2/file_2_1.css"));
-    assertTrue(result.contains("/test_2/file_2_1.js"));
-    assertTrue(result.contains("/test_2/test_2_2/file_2_2_1.js"));
+    assertTrue(result.contains("root.css"));
+    assertTrue(result.contains("test_1/file_1_1.css"));
+    assertTrue(result.contains("test_1/file_1_2.css"));
+    assertTrue(result.contains("test_2/file_2_1.css"));
+    assertTrue(result.contains("test_2/file_2_1.js"));
+    assertTrue(result.contains("test_2/test_2_2/file_2_2_1.js"));
   }
 
   @Test
@@ -33,15 +33,15 @@ class FilesUtilsTest {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
-        testWorkspacePath.toAbsolutePath().toString(), "**/*.css");
+        testWorkspacePath.toAbsolutePath().toString(), "**.css");
 
     assertFalse(result.isEmpty());
     assertEquals(4, result.size());
     assertTrue(result.stream().allMatch(s -> s.contains(".css")));
-    assertTrue(result.contains("/root.css"));
-    assertTrue(result.contains("/test_1/file_1_1.css"));
-    assertTrue(result.contains("/test_1/file_1_2.css"));
-    assertTrue(result.contains("/test_2/file_2_1.css"));
+    assertTrue(result.contains("root.css"));
+    assertTrue(result.contains("test_1/file_1_1.css"));
+    assertTrue(result.contains("test_1/file_1_2.css"));
+    assertTrue(result.contains("test_2/file_2_1.css"));
   }
 
   @Test
@@ -49,13 +49,13 @@ class FilesUtilsTest {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
-        testWorkspacePath.toAbsolutePath().toString(), "/test_1/*.css");
+        testWorkspacePath.toAbsolutePath().toString(), "test_1/*.css");
 
     assertFalse(result.isEmpty());
     assertEquals(2, result.size());
     assertTrue(result.stream().allMatch(s -> s.contains(".css")));
-    assertTrue(result.contains("/test_1/file_1_1.css"));
-    assertTrue(result.contains("/test_1/file_1_2.css"));
+    assertTrue(result.contains("test_1/file_1_1.css"));
+    assertTrue(result.contains("test_1/file_1_2.css"));
   }
 
   @Test
@@ -63,7 +63,7 @@ class FilesUtilsTest {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
-        testWorkspacePath.toAbsolutePath().toString(), "**/*.js");
+        testWorkspacePath.toAbsolutePath().toString(), "**.js");
 
     assertFalse(result.isEmpty());
     assertEquals(2, result.size());
@@ -75,7 +75,7 @@ class FilesUtilsTest {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
-        testWorkspacePath.toAbsolutePath().toString(), "**/test_2/*.css");
+        testWorkspacePath.toAbsolutePath().toString(), "test_2/*.css");
 
     assertFalse(result.isEmpty());
     assertEquals(1, result.size());
@@ -87,7 +87,7 @@ class FilesUtilsTest {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
-        testWorkspacePath.toAbsolutePath().toString(), "**/test_2/*.js", "**/test_2/**/*.js");
+        testWorkspacePath.toAbsolutePath().toString(), "test_2/*.js", "test_2/**/*.js");
 
     assertFalse(result.isEmpty());
     assertEquals(2, result.size());
