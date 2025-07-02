@@ -1,9 +1,11 @@
 package dev.streamx.githhub.utils;
 
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.streamx.githhub.exception.GithubActionException;
+import dev.streamx.exception.GithubActionException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Set;
@@ -94,6 +96,12 @@ class FilesUtilsTest {
     assertTrue(result.stream().allMatch(s -> s.contains(".js")));
   }
 
+  @Test
+  public void testShouldValidatePathMatches() {
+    Path testWorkspacePath = getTestWorkspacePath();
+    assertTrue(FilesUtils.isValidPath(testWorkspacePath.toAbsolutePath().toString(),
+        testWorkspacePath.toAbsolutePath() + "/test_2/file_2_1.css", "test_2/*.css"));
+  }
 
   private Path getTestWorkspacePath() {
     URL testWorkspace = this.getClass().getClassLoader().getResource("dev/streamx/github/files");

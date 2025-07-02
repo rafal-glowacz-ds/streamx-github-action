@@ -1,24 +1,31 @@
 package dev.streamx.githhub.action;
 
 import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.streamx.githhub.exception.GithubActionException;
+import com.fasterxml.jackson.databind.node.TextNode;
+import dev.streamx.clients.ingestion.StreamxClient;
+import dev.streamx.clients.ingestion.exceptions.StreamxClientException;
+import dev.streamx.clients.ingestion.publisher.Message;
+import dev.streamx.clients.ingestion.publisher.Publisher;
+import dev.streamx.clients.ingestion.publisher.SuccessResult;
+import dev.streamx.exception.GithubActionException;
 import dev.streamx.githhub.git.GitService;
 import dev.streamx.githhub.git.impl.DiffResult;
 import dev.streamx.githhub.utils.FilesUtils;
+import dev.streamx.ingestion.IngestionMessageJsonFactory;
+import dev.streamx.ingestion.StreamxClientProvider;
+import dev.streamx.ingestion.payload.RawPayload;
+import dev.streamx.ingestion.payload.WebResourcePayload;
 import io.quarkiverse.githubaction.Action;
 import io.quarkiverse.githubaction.Commands;
 import io.quarkiverse.githubaction.Context;
 import io.quarkiverse.githubaction.Inputs;
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkiverse.githubapp.event.WorkflowDispatch;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,7 +36,20 @@ import org.kohsuke.github.GHEventPayload;
 @ApplicationScoped
 public class WebResourceAction {
 
+  public static final String STREAMX_INGESTION_BASE_URL = "streamx-ingestion-base-url";
+  public static final String STREAMX_TOKEN = "streamx-token";
+  public static final String STREAMX_INGESTION_WEBRESOURCE_INCLUDES = "streamx-ingestion-webresource-includes";
+
   private static final Logger log = Logger.getLogger(WebResourceAction.class);
+  private static final String WEB_RESOURCE_SCHEMA_TYPE = "dev.streamx.blueprints.data.WebResource";
+  private static final String WEB_RESOURCES_CHANNEL = "web-resources";
+  private static final String BYTES_CONTENT_NODE_NAME = "bytes";
+  private static final String CONTENT_NODE_NAME = "content";
+  private static final Map<String, String> PUBLISH_PROPERTIES = Map.of("sx:type",
+      "web-resource/static");
+
+  @Inject
+  StreamxClientProvider streamxClientProvider;
 
   @Inject
   private GitService gitService;
@@ -37,82 +57,126 @@ public class WebResourceAction {
   @Inject
   private ObjectMapper objectMapper;
 
-  @Action
-  void action(Commands commands) {
-    commands.notice("Hello from Quarkus GitHub Action");
+  @Inject
+  private IngestionMessageJsonFactory ingestionMessageJsonFactory;
 
-    commands.appendJobSummary(":wave: Hello from Quarkus GitHub Action");
-  }
-
-  @Action("pull_request")
+  @Action("webresource_pull_request")
   void webresourceSyncOnPullRequestMerged(Commands commands, Inputs inputs,
       @PullRequest GHEventPayload.PullRequest payload, Context context) throws IOException {
-    commands.appendJobSummary(
-        ":wave: Webresource Sync On Pull Request Merged from Quarkus GitHub Action");
-    commands.notice("Here webresourceSyncOnPullRequestMerged from Quarkus GitHub Action");
-
-    commands.notice("commands: " + Objects.isNull(commands));
-    commands.notice("inputs: " + Objects.isNull(inputs));
-    commands.notice("payload: " + Objects.isNull(payload));
-    commands.notice("context: " + Objects.isNull(context));
-
-    String jsonInputs = System.getenv("JSON_INPUTS");
-    commands.notice("jsonInputs: " + jsonInputs);
+    Optional<String> filePatternsInputOpt = inputs.get(STREAMX_INGESTION_WEBRESOURCE_INCLUDES);
+    if (filePatternsInputOpt.isEmpty()) {
+      commands.error(
+          "Missing file patterns variable [STREAMX_INGESTION_WEBRESOURCE_INCLUDES]. Execution skipped.");
+      return;
+    }
+    Optional<String> streamxIngestionUrl = inputs.get(STREAMX_INGESTION_BASE_URL);
+    if (streamxIngestionUrl.isEmpty()) {
+      commands.error(
+          "Missing StreamX ingestion url variable [STREAMX_INGESTION_BASE_URL]. Execution skipped.");
+      return;
+    }
+    Optional<String> streamxToken = inputs.get(STREAMX_TOKEN);
 
     int commits = payload.getPullRequest().getCommits();
     commands.notice("Number of commits: " + commits);
+
     String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
 
-    try {
+    try (StreamxClient streamxClient = streamxClientProvider.createStreamxClient(
+        streamxIngestionUrl.get(), streamxToken)) {
+      String[] filePatterns = objectMapper.readValue(filePatternsInputOpt.get(), String[].class);
+
       DiffResult diffResult = gitService.getDiff(workspace, commits);
       if (diffResult.isEmpty()) {
         commands.notice(String.format("No changes detected at workspace: %s", workspace));
       } else {
-        commands.notice(String.format("Changes detected at workspace: %s", workspace));
         Set<String> modifiedPaths = diffResult.getModifiedPaths();
+        commands.notice(String.format("Changes detected at workspace: %s", workspace));
         commands.notice(String.format("%d changes detected", modifiedPaths.size()));
+        if (!modifiedPaths.isEmpty()) {
+          Map<String, String> properties = PUBLISH_PROPERTIES;
+          Publisher<JsonNode> publisher = streamxClient.newPublisher(getChannel(),
+              JsonNode.class);
+          for (String modifiedFile : modifiedPaths) {
+            if (FilesUtils.isValidPath(workspace, modifiedFile, filePatterns)) {
+              try {
+                SuccessResult result = publishFile(publisher, workspace, modifiedFile);
+                commands.notice(String.format("Publishing resource %s was successful",
+                    result.getKey()));
+              } catch (StreamxClientException exc) {
+                commands.error(String.format("Publishing resource %s has failed with error: %s",
+                    modifiedFile, exc.getMessage()));
+              }
+            }
+          }
+        }
         Set<String> deletedPaths = diffResult.getDeletedPaths();
         commands.notice(String.format("%d deletions detected", deletedPaths.size()));
-
-
+        if (!deletedPaths.isEmpty()) {
+          Publisher<JsonNode> publisher = streamxClient.newPublisher(getChannel(),
+              JsonNode.class);
+          for (String deletedFile : deletedPaths) {
+            if (FilesUtils.isValidPath(workspace, deletedFile, filePatterns)) {
+              try {
+                SuccessResult result = publisher.unpublish(deletedFile);
+                commands.notice(String.format("Unpublishing resource %s was successful",
+                    result.getKey()));
+              } catch (StreamxClientException exc) {
+                commands.error(String.format("Unpublishing resource %s has failed with error: %s",
+                    deletedFile, exc.getMessage()));
+              }
+            }
+          }
+        }
       }
     } catch (GithubActionException exc) {
       log.error(exc.getMessage(), exc);
       commands.error(exc.getMessage());
+    } catch (StreamxClientException exc) {
+      String errMsg = "Failed to execute StreamX client: " + exc.getMessage();
+      log.error(errMsg, exc);
+      commands.error(errMsg);
     }
   }
 
-  @Action("workflow_dispatch")
-  void publishAll(Commands commands, Inputs inputs,
-      @WorkflowDispatch GHEventPayload.WorkflowDispatch payload,
-      Context context) {
-    commands.notice("Hello from publishAll Quarkus GitHub Action");
-
-    commands.appendJobSummary(":wave: Hello from publishAll Quarkus GitHub Action");
-
-
-    Optional<String> filePatternsInputOpt = inputs.get("streamx-ingestion-webresource-includes");
+  @Action("webresource_workflow_dispatch")
+  void publishAll(Commands commands, Inputs inputs, Context context) {
+    Optional<String> filePatternsInputOpt = inputs.get(STREAMX_INGESTION_WEBRESOURCE_INCLUDES);
     if (filePatternsInputOpt.isEmpty()) {
-      commands.error("Missing file patterns variable [STREAMX_INGESTION_WEBRESOURCE_INCLUDES]. Execution skipped.");
+      commands.error(
+          "Missing file patterns variable [STREAMX_INGESTION_WEBRESOURCE_INCLUDES]. Execution skipped.");
       return;
     }
+    Optional<String> streamxIngestionUrl = inputs.get(STREAMX_INGESTION_BASE_URL);
+    if (streamxIngestionUrl.isEmpty()) {
+      commands.error(
+          "Missing StreamX ingestion url variable [STREAMX_INGESTION_BASE_URL]. Execution skipped.");
+      return;
+    }
+    Optional<String> streamxToken = inputs.get(STREAMX_TOKEN);
 
     String workspace = context.getGitHubWorkspace();
     commands.notice("Workspace: " + workspace);
 
-    commands.notice("Includes AntMatch patterns: " + filePatternsInputOpt);
-    String jsonInputs = System.getenv("JSON_INPUTS");
-    commands.notice("JSON_INPUTS: " + jsonInputs);
-
-    try {
+    try (StreamxClient streamxClient = streamxClientProvider.createStreamxClient(
+        streamxIngestionUrl.get(), streamxToken)) {
       String[] filePatterns = objectMapper.readValue(filePatternsInputOpt.get(), String[].class);
       Set<String> files = FilesUtils.listFilteredFiles(workspace, filePatterns);
-
-      for (String filePath : files) {
-        commands.notice("file: " + filePath);
+      if (!files.isEmpty()) {
+        Publisher<JsonNode> publisher = streamxClient.newPublisher(getChannel(),
+            JsonNode.class);
+        for (String filePath : files) {
+          try {
+            SuccessResult result = publishFile(publisher, workspace, filePath);
+            commands.notice(String.format("Publishing resource %s was successful",
+                result.getKey()));
+          } catch (StreamxClientException exc) {
+            commands.error(String.format("Publishing resource %s has failed with error: %s",
+                filePath, exc.getMessage()));
+          }
+        }
       }
-
     } catch (GithubActionException exc) {
       log.error(exc.getMessage(), exc);
       commands.error(exc.getMessage());
@@ -120,8 +184,38 @@ public class WebResourceAction {
       String errMsg = "Failed to deserialize file patterns: " + exc.getMessage();
       log.error(errMsg, exc);
       commands.error(errMsg);
+    } catch (StreamxClientException exc) {
+      String errMsg = "Failed to execute StreamX client: " + exc.getMessage();
+      log.error(errMsg, exc);
+      commands.error(errMsg);
     }
+  }
 
+  private SuccessResult publishFile(Publisher<JsonNode> publisher, String workspace,
+      String filePath) throws StreamxClientException, GithubActionException {
+    WebResourcePayload webResourcePayload = new WebResourcePayload(workspace, filePath);
+    JsonNode message = prepareIngestionMessage(webResourcePayload);
+    return publisher.send(message);
+  }
+
+  private String getChannel() {
+    return WEB_RESOURCES_CHANNEL;
+  }
+
+  private JsonNode prepareIngestionMessage(WebResourcePayload payload) throws GithubActionException {
+    RawPayload rawPayload = payload.resolve();
+    JsonNode bytesNode = objectMapper.createObjectNode()
+        .put(BYTES_CONTENT_NODE_NAME, TextNode.valueOf(new String(rawPayload.source(),
+            StandardCharsets.UTF_8)));
+    JsonNode payloadContent = objectMapper.createObjectNode()
+        .put(CONTENT_NODE_NAME, bytesNode);
+    return ingestionMessageJsonFactory.from(
+        payload.getFilePath(),
+        Message.PUBLISH_ACTION,
+        payloadContent,
+        PUBLISH_PROPERTIES,
+        WEB_RESOURCE_SCHEMA_TYPE
+    );
   }
 
 }

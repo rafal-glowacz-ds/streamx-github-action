@@ -1,11 +1,12 @@
 package dev.streamx.githhub.utils;
 
-import dev.streamx.githhub.exception.GithubActionException;
+import dev.streamx.exception.GithubActionException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,13 @@ public class FilesUtils {
     } catch (IOException exc) {
       throw new GithubActionException(exc.getMessage(), exc);
     }
+  }
+
+  public static boolean isValidPath(String workspace, String path, String... filters) {
+    return Optional.ofNullable(path)
+        .map(p -> p.substring(workspace.length() + 1))
+        .filter(p -> validatePathMatches(p, filters))
+        .isPresent();
   }
 
   private static boolean validatePathMatches(String path, String[] filters) {

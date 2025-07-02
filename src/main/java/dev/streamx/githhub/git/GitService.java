@@ -1,6 +1,6 @@
 package dev.streamx.githhub.git;
 
-import dev.streamx.githhub.exception.GithubActionException;
+import dev.streamx.exception.GithubActionException;
 import dev.streamx.githhub.git.impl.DiffResult;
 
 public interface GitService {

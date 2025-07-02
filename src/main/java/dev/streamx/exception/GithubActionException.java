@@ -1,4 +1,4 @@
-package dev.streamx.githhub.exception;
+package dev.streamx.exception;
 
 public class GithubActionException extends Exception {
 

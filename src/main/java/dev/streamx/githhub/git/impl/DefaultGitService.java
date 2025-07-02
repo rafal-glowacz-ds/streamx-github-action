@@ -1,6 +1,6 @@
 package dev.streamx.githhub.git.impl;
 
-import dev.streamx.githhub.exception.GithubActionException;
+import dev.streamx.exception.GithubActionException;
 import dev.streamx.githhub.git.GitService;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.File;
@@ -61,7 +61,7 @@ public class DefaultGitService implements GitService {
     }
   }
 
-  private Git getGit(String workspace) {
+  protected Git getGit(String workspace) {
     return Optional.ofNullable(workspace)
         .map(File::new)
         .map(p -> {
