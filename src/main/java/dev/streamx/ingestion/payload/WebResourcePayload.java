@@ -33,6 +33,7 @@ public class WebResourcePayload {
 
   public RawPayload resolve() throws GithubActionException {
     byte[] bytes = readFile(absolutePath);
+    log.debug(String.format("Read file: %s, bytes length: %d", absolutePath, bytes.length));
     return new RawPayload(bytes);
   }
 
