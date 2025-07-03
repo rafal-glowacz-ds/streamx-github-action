@@ -7,8 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 public class WebResourcePayload {
+
+  private static final Logger log = Logger.getLogger(WebResourcePayload.class);
 
   private final String workspace;
 
@@ -39,6 +42,9 @@ public class WebResourcePayload {
 
   private byte[] readFile(String data) throws GithubActionException {
     Path path = Path.of(data);
+    if (!Files.exists(path)) {
+      log.error(String.format("File %s does not exists in workspace: %s", filePath, workspace));
+    }
     try {
       return Files.readAllBytes(path);
     } catch (NoSuchFileException e) {

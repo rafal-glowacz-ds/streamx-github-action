@@ -173,6 +173,7 @@ public class WebResourceAction {
           } catch (StreamxClientException exc) {
             commands.error(String.format("Publishing resource %s has failed with error: %s",
                 filePath, exc.getMessage()));
+
           }
         }
       }
@@ -192,6 +193,7 @@ public class WebResourceAction {
 
   private SuccessResult publishFile(Publisher<JsonNode> publisher, String workspace,
       String filePath) throws StreamxClientException, GithubActionException {
+    log.debug(String.format("Publishing file: %s from workspace: %s", filePath, workspace));
     WebResourcePayload webResourcePayload = new WebResourcePayload(workspace, filePath);
     JsonNode message = prepareIngestionMessage(webResourcePayload);
     return publisher.send(message);
