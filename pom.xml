@@ -149,7 +149,7 @@
         <repository>
             <id>streamx-maven-public-releases</id>
             <url>
-                artifactregistry://europe-west1-maven.pkg.dev/streamx-releases/streamx-maven-public-releases
+                https://europe-west1-maven.pkg.dev/streamx-releases/streamx-maven-public-releases
             </url>
             <releases>
                 <enabled>true</enabled>
