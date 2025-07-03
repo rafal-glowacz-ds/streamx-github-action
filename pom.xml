@@ -44,6 +44,11 @@
             <version>${json-path.version}</version>
         </dependency>
         <dependency>
+            <groupId>dev.streamx</groupId>
+            <artifactId>ingestion-client</artifactId>
+            <version>${streamx.ingestion.client.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
         </dependency>
@@ -52,18 +57,15 @@
             <artifactId>quarkus-github-action</artifactId>
             <version>${quarkus.github.action.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
             <version>${jgit.version}</version>
         </dependency>
         <dependency>
-            <groupId>dev.streamx</groupId>
-            <artifactId>ingestion-client</artifactId>
-            <version>${streamx.ingestion.client.version}</version>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>commons-logging-jboss-logging</artifactId>
         </dependency>
-
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>
