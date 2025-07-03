@@ -210,13 +210,17 @@ public class WebResourceAction {
             StandardCharsets.UTF_8)));
     JsonNode payloadContent = objectMapper.createObjectNode()
         .put(CONTENT_NODE_NAME, bytesNode);
-    return ingestionMessageJsonFactory.from(
+    JsonNode message = ingestionMessageJsonFactory.from(
         payload.getFilePath(),
         Message.PUBLISH_ACTION,
         payloadContent,
         PUBLISH_PROPERTIES,
         WEB_RESOURCE_SCHEMA_TYPE
     );
+    if (log.isDebugEnabled()) {
+      log.debug(String.format("Payload: %s", message.toPrettyString()));
+    }
+    return message;
   }
 
 }
