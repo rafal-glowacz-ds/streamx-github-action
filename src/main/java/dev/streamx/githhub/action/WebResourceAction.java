@@ -3,6 +3,7 @@ package dev.streamx.githhub.action;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import dev.streamx.clients.ingestion.StreamxClient;
 import dev.streamx.clients.ingestion.exceptions.StreamxClientException;
@@ -203,13 +204,16 @@ public class WebResourceAction {
     return WEB_RESOURCES_CHANNEL;
   }
 
-  private JsonNode prepareIngestionMessage(WebResourcePayload payload) throws GithubActionException {
+  protected JsonNode prepareIngestionMessage(WebResourcePayload payload) throws GithubActionException {
     RawPayload rawPayload = payload.resolve();
-    JsonNode bytesNode = objectMapper.createObjectNode()
-        .put(BYTES_CONTENT_NODE_NAME, TextNode.valueOf(new String(rawPayload.source(),
-            StandardCharsets.UTF_8)));
-    JsonNode payloadContent = objectMapper.createObjectNode()
-        .put(CONTENT_NODE_NAME, bytesNode);
+    TextNode text = TextNode.valueOf(new String(rawPayload.source(),
+        StandardCharsets.UTF_8));
+
+    ObjectNode payloadContent = objectMapper.createObjectNode();
+    ObjectNode content = payloadContent.putObject(CONTENT_NODE_NAME);
+    content.set(BYTES_CONTENT_NODE_NAME, text);
+    payloadContent.set(CONTENT_NODE_NAME, content);
+
     JsonNode message = ingestionMessageJsonFactory.from(
         payload.getFilePath(),
         Message.PUBLISH_ACTION,
