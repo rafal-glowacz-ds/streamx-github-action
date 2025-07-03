@@ -38,12 +38,13 @@ class WebResourceActionTest {
     RawPayload rawPayload = new RawPayload("test content".getBytes(StandardCharsets.UTF_8));
     WebResourcePayload payload = mock(WebResourcePayload.class);
     when(payload.resolve()).thenReturn(rawPayload);
+    when(payload.getFilePath()).thenReturn("styles/main.css");
 
     JsonNode result = instance.prepareIngestionMessage(payload);
     assertNotNull(result);
     assertEquals("""
 {
-  "key" : null,
+  "key" : "styles/main.css",
   "action" : "publish",
   "eventTime" : null,
   "properties" : {
