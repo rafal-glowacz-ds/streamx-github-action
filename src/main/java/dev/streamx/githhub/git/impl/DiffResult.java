@@ -15,18 +15,21 @@ public class DiffResult {
 
   private static final Logger log = Logger.getLogger(DiffResult.class);
 
-  private final Set<DiffEntry> updated = new HashSet<>();
+  private final Set<String> updated = new HashSet<>();
 
-  private final Set<DiffEntry> deleted = new HashSet<>();
+  private final Set<String> deleted = new HashSet<>();
 
   void add(DiffEntry entry) {
     log.debug("Adding entry: " + entry);
+    log.debug("old -> new path: " + entry.getOldPath() + " -> " + entry.getNewPath());
     Optional.ofNullable(entry)
         .ifPresent(e -> {
+          String path = Optional.ofNullable(e.getNewPath())
+              .orElse(e.getOldPath());
           if (ChangeType.DELETE.equals(e.getChangeType())) {
-            deleted.add(e);
+            deleted.add(path);
           } else {
-            updated.add(e);
+            updated.add(path);
           }
         });
   }
@@ -36,15 +39,11 @@ public class DiffResult {
   }
 
   public Set<String> getModifiedPaths() {
-    return deleted.stream()
-        .map(DiffEntry::getNewPath)
-        .collect(Collectors.toSet());
+    return updated;
   }
 
   public Set<String> getDeletedPaths() {
-    return deleted.stream()
-        .map(DiffEntry::getNewPath)
-        .collect(Collectors.toSet());
+    return deleted;
   }
 
 }
