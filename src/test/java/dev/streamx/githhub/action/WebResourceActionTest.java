@@ -72,9 +72,9 @@ class WebResourceActionTest {
       protected WebResourcePayload getWebResourcePayload(String workspace, String filePath)
           throws GitHubActionException {
         WebResourcePayload payload = mock(WebResourcePayload.class);
-        when(payload.getFilePath()).thenReturn(filePath.substring(workspace.length() + 1));
+        when(payload.getFilePath()).thenReturn(filePath);
         when(payload.resolve()).thenReturn(
-            new RawPayload(("Content of " + workspace + filePath).getBytes()));
+            new RawPayload(("Content of " + filePath + " in workspace " + workspace).getBytes()));
         return payload;
       }
     };
@@ -119,7 +119,7 @@ class WebResourceActionTest {
         secretToken)).thenReturn(streamxClient);
 
     DiffResult diffResult = createMockDiffResult(
-        Set.of("/var/workspace/styles/main.css", "/var/workspace/scripts/script.js"),
+        Set.of("styles/main.css", "scripts/script.js"),
         Collections.emptySet());
     when(gitService.getDiff("/var/workspace", 2)).thenReturn(diffResult);
     when(publisher.send(any(JsonNode.class))).thenReturn(
@@ -132,12 +132,12 @@ class WebResourceActionTest {
       assertEquals("styles/main.css", jsonNode.get("key").textValue());
       assertEquals("publish", jsonNode.get("action").textValue());
       assertTrue(jsonNode.toPrettyString()
-          .contains("Content of /var/workspace/var/workspace/styles/main.css"));
+          .contains("Content of styles/main.css in workspace /var/workspace"));
       return true;
     }));
   }
 
-  //@Test
+  @Test
   public void testShouldUnpublishFilesFromStreamX()
       throws IOException, StreamxClientException, GitHubActionException {
     when(context.getGitHubWorkspace()).thenReturn("/var/workspace");
@@ -153,7 +153,7 @@ class WebResourceActionTest {
 
     DiffResult diffResult = createMockDiffResult(
         Collections.emptySet(),
-        Set.of("/var/workspace/styles/main.css", "/var/workspace/scripts/script.js")
+        Set.of("styles/main.css", "scripts/script.js")
     );
     when(gitService.getDiff("/var/workspace", 2)).thenReturn(diffResult);
     when(publisher.unpublish("styles/main.css")).thenReturn(
@@ -162,13 +162,7 @@ class WebResourceActionTest {
     instance.webresourceSyncOnPullRequestMerged(commands, inputs,
         mockPullRequestPayload(2), context);
 
-    verify(publisher, times(1)).send(argThat((JsonNode jsonNode) -> {
-      assertEquals("styles/main.css", jsonNode.get("key").textValue());
-      assertEquals("unpublish", jsonNode.get("action").textValue());
-      assertTrue(jsonNode.toPrettyString()
-          .contains("Content of /var/workspace/var/workspace/styles/main.css"));
-      return true;
-    }));
+    verify(publisher, times(1)).unpublish("styles/main.css");
   }
 
 

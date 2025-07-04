@@ -99,9 +99,7 @@ class FilesUtilsTest {
 
   @Test
   public void testShouldValidatePathMatches() {
-    Path testWorkspacePath = getTestWorkspacePath();
-    assertTrue(FilesUtils.isValidPath(testWorkspacePath.toAbsolutePath().toString(),
-        testWorkspacePath.toAbsolutePath() + "/test_2/file_2_1.css", "test_2/*.css"));
+    assertTrue(FilesUtils.isValidPath("test_2/file_2_1.css", "test_2/*.css"));
   }
 
   private Path getTestWorkspacePath() {

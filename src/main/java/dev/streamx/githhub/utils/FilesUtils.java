@@ -42,9 +42,8 @@ public class FilesUtils {
     }
   }
 
-  public static boolean isValidPath(String workspace, String path, String... filters) {
+  public static boolean isValidPath(String path, String... filters) {
     return Optional.ofNullable(path)
-        .map(p -> p.substring(workspace.length() + 1))
         .filter(p -> validatePathMatches(p, filters))
         .isPresent();
   }

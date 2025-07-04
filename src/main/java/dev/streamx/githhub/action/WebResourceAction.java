@@ -106,7 +106,7 @@ public class WebResourceAction {
           for (String modifiedFile : modifiedPaths) {
             commands.notice(String.format("Validating file: %s", modifiedFile));
 
-            if (FilesUtils.isValidPath(workspace, modifiedFile, filePatterns)) {
+            if (FilesUtils.isValidPath(modifiedFile, filePatterns)) {
               try {
                 SuccessResult result = publishFile(publisher, workspace, modifiedFile);
                 commands.notice(String.format("Resource '%s' was published successfully.",
@@ -125,7 +125,7 @@ public class WebResourceAction {
               JsonNode.class);
           for (String deletedFile : deletedPaths) {
             commands.notice(String.format("Validating file: %s", deletedFile));
-            if (FilesUtils.isValidPath(workspace, deletedFile, filePatterns)) {
+            if (FilesUtils.isValidPath(deletedFile, filePatterns)) {
               try {
                 SuccessResult result = publisher.unpublish(deletedFile);
                 commands.notice(String.format("Unpublishing resource %s was successful",
