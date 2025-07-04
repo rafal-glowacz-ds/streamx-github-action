@@ -1,6 +1,6 @@
 package dev.streamx.githhub.git.impl;
 
-import dev.streamx.exception.GithubActionException;
+import dev.streamx.exception.GitHubActionException;
 import dev.streamx.githhub.git.GitService;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.File;
@@ -20,26 +20,26 @@ public class DefaultGitService implements GitService {
 
   public static final String CHANGED_REV_STR_FMT = "HEAD~%d^{tree}";
 
-  public DiffResult getDiff(String workspace, int commits) throws GithubActionException {
+  public DiffResult getDiff(String workspace, int commits) throws GitHubActionException {
     if (StringUtils.isBlank(workspace) || commits == 0) {
       return DiffResult.EMPTY_RESULT;
     }
 
     Git git = this.getGit(workspace);
     if (Objects.isNull(git)) {
-      throw new GithubActionException(String.format("Git repository not found for %s", workspace));
+      throw new GitHubActionException(String.format("Git repository not found for %s", workspace));
     }
 
     Repository repository = git.getRepository();
     try (ObjectReader reader = repository.newObjectReader()) {
       ObjectId head = repository.resolve("HEAD^{tree}");
       if (Objects.isNull(head)) {
-        throw new GithubActionException(String.format("Git HEAD^{tree} can not resolve for %s", workspace));
+        throw new GitHubActionException(String.format("Git HEAD^{tree} can not resolve for %s", workspace));
       }
       String changedRevStr = String.format(CHANGED_REV_STR_FMT, commits);
       ObjectId changes = repository.resolve(changedRevStr);
       if (Objects.isNull(changes)) {
-        throw new GithubActionException(String.format("Git %s can not resolve for %s", changedRevStr, workspace));
+        throw new GitHubActionException(String.format("Git %s can not resolve for %s", changedRevStr, workspace));
       }
 
       CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
@@ -55,9 +55,9 @@ public class DefaultGitService implements GitService {
           .forEach(diffResult::add);
       return diffResult;
     } catch (GitAPIException e) {
-      throw new GithubActionException("Diff GIT command has failed: " + e.getMessage(), e);
+      throw new GitHubActionException("Diff GIT command has failed: " + e.getMessage(), e);
     } catch (IOException e) {
-      throw new GithubActionException("Diff GIT execution has failed: " + e.getMessage(), e);
+      throw new GitHubActionException("Diff GIT execution has failed: " + e.getMessage(), e);
     }
   }
 

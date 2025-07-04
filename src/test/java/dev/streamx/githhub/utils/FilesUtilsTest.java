@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.streamx.exception.GithubActionException;
+import dev.streamx.exception.GitHubActionException;
+import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Set;
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.Test;
 class FilesUtilsTest {
 
   @Test
-  public void testShouldListAllFiles() throws GithubActionException {
+  public void testShouldListAllFiles() throws GitHubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFiles(testWorkspacePath.toAbsolutePath().toString());
@@ -31,7 +32,7 @@ class FilesUtilsTest {
   }
 
   @Test
-  public void testShouldListOnlyCssFiles() throws GithubActionException {
+  public void testShouldListOnlyCssFiles() throws GitHubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
@@ -47,7 +48,7 @@ class FilesUtilsTest {
   }
 
   @Test
-  public void testShouldListOnlyTest1CssFiles() throws GithubActionException {
+  public void testShouldListOnlyTest1CssFiles() throws GitHubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
@@ -61,7 +62,7 @@ class FilesUtilsTest {
   }
 
   @Test
-  public void testShouldListOnlyJsFiles() throws GithubActionException {
+  public void testShouldListOnlyJsFiles() throws GitHubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
@@ -73,7 +74,7 @@ class FilesUtilsTest {
   }
 
   @Test
-  public void testShouldListOnlyCssFilesFromOneFilter() throws GithubActionException {
+  public void testShouldListOnlyCssFilesFromOneFilter() throws GitHubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
@@ -85,7 +86,7 @@ class FilesUtilsTest {
   }
 
   @Test
-  public void testShouldListOnlyJsFilesFromOneFilter() throws GithubActionException {
+  public void testShouldListOnlyJsFilesFromOneFilter() throws GitHubActionException {
     Path testWorkspacePath = getTestWorkspacePath();
 
     Set<String> result = FilesUtils.listFilteredFiles(
@@ -104,8 +105,7 @@ class FilesUtilsTest {
   }
 
   private Path getTestWorkspacePath() {
-    URL testWorkspace = this.getClass().getClassLoader().getResource("dev/streamx/github/files");
-    Path testWorkspacePath = Path.of(testWorkspace.getPath());
-    return testWorkspacePath;
+    File testWorkspace = new File("src/test/resources/dev/streamx/github/files");
+    return Path.of(testWorkspace.getAbsolutePath());
   }
 }

@@ -1,13 +1,10 @@
 package dev.streamx.ingestion;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Map;
 
-@ApplicationScoped
 public class IngestionMessageJsonFactory {
 
   private static final ObjectMapper mapper = new ObjectMapper();
@@ -21,7 +18,7 @@ public class IngestionMessageJsonFactory {
    * @return JsonNode representation of {@link dev.streamx.clients.ingestion.publisher.Message}
    */
 
-  public JsonNode from(
+  public static JsonNode from(
       String key,
       String action,
       JsonNode payloadContent,

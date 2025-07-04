@@ -1,6 +1,6 @@
 package dev.streamx.ingestion.payload;
 
-import dev.streamx.exception.GithubActionException;
+import dev.streamx.exception.GitHubActionException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +31,7 @@ public class WebResourcePayload {
         workspace + File.separator + filePath;
   }
 
-  public RawPayload resolve() throws GithubActionException {
+  public RawPayload resolve() throws GitHubActionException {
     byte[] bytes = readFile(absolutePath);
     log.debug(String.format("Read file: %s, bytes length: %d", absolutePath, bytes.length));
     return new RawPayload(bytes);
@@ -41,7 +41,7 @@ public class WebResourcePayload {
     return filePath;
   }
 
-  private byte[] readFile(String data) throws GithubActionException {
+  private byte[] readFile(String data) throws GitHubActionException {
     Path path = Path.of(data);
     if (!Files.exists(path)) {
       log.error(String.format("File %s does not exists in workspace: %s", filePath, workspace));
@@ -49,10 +49,10 @@ public class WebResourcePayload {
     try {
       return Files.readAllBytes(path);
     } catch (NoSuchFileException e) {
-      throw new GithubActionException(String.format("Can not read file %s: %s",
+      throw new GitHubActionException(String.format("Can not read file %s: %s",
           data, e.getMessage()), e);
     } catch (IOException e) {
-      throw new GithubActionException(String.format("Failed to read file %s: %s",
+      throw new GitHubActionException(String.format("Failed to read file %s: %s",
           data, e.getMessage()), e);
     }
   }
